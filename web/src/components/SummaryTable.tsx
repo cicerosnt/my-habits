@@ -1,23 +1,44 @@
-import { genereteDatesFromYearBeginning } from "../ultils/generete-dates-from-year-beginning";
+import dayjs from "dayjs";
+import { useEffect, useState } from "react";
+import { api } from "../lib/axios";
+import { generateDatesFromYearBeginning } from "../ultils/generete-dates-from-year-beginning";
 import { HabitDay } from "./HabitDay";
 
 const weekDays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
-const summaryDate = genereteDatesFromYearBeginning();
-const minimusSummaryDatesSize = 18 *7;
-const amountOfDaysToFill = minimusSummaryDatesSize - summaryDate.length
+const summaryDates = generateDatesFromYearBeginning();
+const minimusSummaryDatesSize = 18 * 7;
+const amountOfDaysToFill = minimusSummaryDatesSize - summaryDates.length;
+
+type Summary = {
+  id: string;
+  date: string;
+  amount: number;
+  completed: number;
+}[];
 
 export function SummaryTable() {
+
+  const [summary, setSummary] = useState<Summary>([]);
+  
+  useEffect(()=> {
+    api.get('summary').then(response => {
+      setSummary(response.data)
+      
+      console.log(response.data)
+    })
+  },[]);
+
   return (
     <div className="w-full flex">
       <div className="grid grid-rows-7 grid-flow-row gap-3">
-        {weekDays.map((day, i) => {
+        {weekDays.map((weekDay, i) => {
           return (
             <div 
-              key={`${day}-${i}`} 
+              key={`${weekDay}-${i}`} 
               className="text-zinc-400 text-xl h-10 w-10 font-bold flex items-center justify-center"
             >
-              {day}
+              {weekDay}
             </div>
           )
         })}
@@ -26,12 +47,18 @@ export function SummaryTable() {
       <div 
         className="grid grid-rows-7 grid-flow-col gap-3"
       >
-        {summaryDate.map(date => {
+        {summary.length && summaryDates.map((date) => {
+          
+          const dayInSummary = summary.find(day => {
+            return dayjs(date).isSame(day.date, 'day');
+          })
+        
           return (
             <HabitDay 
               key={date.toString()}
-              amount={5} 
-              completed={Math.round(Math.random() * 5)} 
+              date={date}
+              amount={dayInSummary?.amount} 
+              completed={dayInSummary?.completed}
             /> 
           )
         })}
