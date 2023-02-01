@@ -1,9 +1,10 @@
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, Alert } from 'react-native';
 import { HabitDay, DAY_SIZE } from '../components/HabitDay';
 import { Header } from '../components/Header';
 import {generateRangeDatesFromYearStart} from '../utils/generate-range-between-dates';
-import {generateProgressPercentage} from '../utils/generate-progress-percentage';
+import { api } from '../lib/axios';
 import { useNavigation } from '@react-navigation/native';
+import { useEffect, useState } from 'react';
 
 const weekDays =  [ 'D','S','T','Q','W','S','S'];
 const datesFromYersStart = generateRangeDatesFromYearStart();
@@ -11,7 +12,28 @@ const minimunSumarryDateSizes = 18 * 5;
 const amountOfDaysToFill = minimunSumarryDateSizes - datesFromYersStart.length;
 
 export function Home(){
-const {navigate} = useNavigation();
+  const {navigate} = useNavigation();
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] =  useState(null);
+  
+  async function fetchData() {
+    try {
+      setLoading(true)
+      const response = await api.get('/summary');
+      setSummary(response.data);
+      console.log(response.data)
+    } catch (error) {
+      Alert.alert('Ops!!!', 'Não foi possível carregar o sumário de hábitos.')
+      console.log(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+  
+  useEffect(()=>{
+    fetchData();
+  },[]);
+
   return (
     <View className="flex-1 bg-background px-8 pt-16">
       <Header/>
